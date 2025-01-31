@@ -47,18 +47,18 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ github.event.inputs.region }}
 
-    - name: Initialize Terraform
-      run: terraform init
+    # - name: Initialize Terraform
+    #   run: terraform init
 
-    - name: Validate Terraform
-      run: terraform validate
+    # - name: Validate Terraform
+    #   run: terraform validate
 
-    - name: Plan Terraform
-      run: terraform plan -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}"
+    # - name: Plan Terraform
+    #   run: terraform plan -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}"
 
-    - name: Apply Terraform
-      run: terraform apply -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
+    # - name: Apply Terraform
+    #   run: terraform apply -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
 
-    - name: Destroy Terraform (Optional)
-      if: ${{ github.event.inputs.destroy == 'true' }}
-      run: terraform destroy -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
+    # - name: Destroy Terraform (Optional)
+    #   if: ${{ github.event.inputs.destroy == 'true' }}
+    #   run: terraform destroy -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
