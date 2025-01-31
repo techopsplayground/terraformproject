@@ -8,7 +8,7 @@ on:
         required: true
         type: choice
         options:
-          - aws
+          - AWS
           - azure
       region:
         description: 'Select the region'
@@ -19,6 +19,10 @@ on:
           - us-west-1
           - az-east
           - az-west
+      destroy:
+        description: 'Destroy the resources'
+        required: false
+        type: boolean
 jobs:
   terraform:
     name: Terraform Job
@@ -33,32 +37,52 @@ jobs:
       with:
         terraform_version: 1.5.6
 
-    - name: Authenticate to GCP
-      if: ${{ github.event.inputs.cloud_provider == 'gcp' }}
+    - name: GCP - Authentication
+      if: ${{ github.event.inputs.cloud_provider == 'GCP' }}
       uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-    - name: Authenticate to AWS
-      if: ${{ github.event.inputs.cloud_provider == 'aws' }}
+    - name: GCP - Initialize Terraform
+      if: ${{ github.event.inputs.cloud_provider == 'GCP' }}
+      run: terraform init
+
+    - name: GCP - Validate Terraform
+      if: ${{ github.event.inputs.cloud_provider == 'GCP' }}
+      run: terraform validate
+
+    - name: GCP - Plan Terraform
+      if: ${{ github.event.inputs.cloud_provider == 'GCP' }}
+      run: terraform plan -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}"
+
+    - name: GCP - Apply Terraform
+      if: ${{ github.event.inputs.cloud_provider == 'GCP' }}
+      run: terraform apply -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
+
+    - name: AWS - Authentication
+      if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
       uses: aws-actions/configure-aws-credentials@v3
       with:
         aws-access-key-id: ${{ secrets.M_AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.M_AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ github.event.inputs.region }}
 
-    # - name: Initialize Terraform
-    #   run: terraform init
+    - name: AWS - Initialize Terraform
+      if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
+      run: terraform init
 
-    # - name: Validate Terraform
-    #   run: terraform validate
+    - name: AWS - Validate Terraform
+      if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
+      run: terraform validate
 
-    # - name: Plan Terraform
-    #   run: terraform plan -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}"
+    - name: AWS - Plan Terraform
+      if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
+      run: terraform plan -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}"
 
-    # - name: Apply Terraform
-    #   run: terraform apply -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
+    - name: AWS - Apply Terraform
+      if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
+      run: terraform apply -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
 
-    # - name: Destroy Terraform (Optional)
-    #   if: ${{ github.event.inputs.destroy == 'true' }}
-    #   run: terraform destroy -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
+    - name: Destroy Terraform (Optional)
+      if: ${{ github.event.inputs.destroy == 'true' }}
+      run: terraform destroy -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
