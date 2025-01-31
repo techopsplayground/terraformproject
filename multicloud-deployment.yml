@@ -1,0 +1,64 @@
+name: Multi-Cloud VM Creation
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform selected (AWS or Azure)'
+        required: true
+        type: choice
+        options:
+          - aws
+          - azure
+      region:
+        description: 'Select the region'
+        required: true
+        type: choice
+        options:
+          - us-east-1
+          - us-west-1
+          - az-east
+          - az-west
+jobs:
+  terraform:
+    name: Terraform Job
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.6
+
+    - name: Authenticate to GCP
+      if: ${{ github.event.inputs.cloud_provider == 'gcp' }}
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+    - name: Authenticate to AWS
+      if: ${{ github.event.inputs.cloud_provider == 'aws' }}
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ github.event.inputs.region }}
+
+    - name: Initialize Terraform
+      run: terraform init
+
+    - name: Validate Terraform
+      run: terraform validate
+
+    - name: Plan Terraform
+      run: terraform plan -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}"
+
+    - name: Apply Terraform
+      run: terraform apply -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
+
+    - name: Destroy Terraform (Optional)
+      if: ${{ github.event.inputs.destroy == 'true' }}
+      run: terraform destroy -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
