@@ -3,8 +3,8 @@ name: Multi-Cloud VM Creation
 on:
   workflow_dispatch:
     inputs:
-      platform:
-        description: 'Platform selected (AWS or Azure)'
+      cloud_provider:
+        description: 'Cloud Provider selected (AWS or Azure)'
         required: true
         type: choice
         options:
