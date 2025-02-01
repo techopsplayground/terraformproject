@@ -98,6 +98,7 @@ jobs:
     - name: Delete S3 Bucket and DynamoDB Table (if exists)
       if: ${{ env.BUCKET_EXISTS == 'true' }}
       run: |
+        BUCKET_NAME=${{ github.event.inputs.bucket_name }}
         aws s3 rm s3://$BUCKET_NAME --recursive  # Empty the bucket
         aws s3 rb s3://$BUCKET_NAME
         aws dynamodb delete-table --table-name terraform-lock || true
