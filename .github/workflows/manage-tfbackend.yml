@@ -20,19 +20,22 @@ on:
           - us-west-1
           - az-east
           - az-west
-      destroy:
-        description: 'Destroy the resources'
-        required: false
-        type: boolean
-      destory_bucket_name:
-        description: 'Bucket name to destory'
-        required: false
+      action:
+        description: 'Action Needed'
+        required: true
+        type: choice
+        options:
+          - create
+          - destroy
+      bucket_name:
+        description: 'Bucket Name'
+        required: true
         type: string
-        default: 'ms-tfstate-'
+        default: 'ms01-tfstate-'
 jobs:
   setup-s3-backend:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.destroy == false && github.event.inputs.cloud_provider == 'AWS' }}
+    if: ${{ github.event.inputs.action == 'create' && github.event.inputs.cloud_provider == 'AWS' }}
     steps:
     
     - name: Checkout repository
@@ -47,8 +50,7 @@ jobs:
 
     - name: AWS - Set Bucket Name
       run: |
-        DATE=$(date +'%Y%m%d')
-        BUCKET_NAME="ms-tfstate-${DATE}"
+        BUCKET_NAME=${{ github.event.inputs.bucket_name }}
         echo "BUCKET_NAME=$BUCKET_NAME" >> $GITHUB_ENV
         echo "Generated Bucket Name: $BUCKET_NAME"
 
@@ -73,7 +75,7 @@ jobs:
     
   destroy-s3-backend:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.destroy == true && github.event.inputs.cloud_provider == 'AWS' }}
+    if: ${{ github.event.inputs.action == 'destroy' && github.event.inputs.cloud_provider == 'AWS' }}
     steps:
 
     - name: Configure AWS Credentials
@@ -86,7 +88,7 @@ jobs:
     - name: Check if S3 Bucket Exists
       id: check_bucket
       run: |
-        BUCKET_NAME=${{ github.event.inputs.destory_bucket_name }}
+        BUCKET_NAME=${{ github.event.inputs.bucket_name }}
         if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
           echo "BUCKET_EXISTS=true" >> $GITHUB_ENV
         else
