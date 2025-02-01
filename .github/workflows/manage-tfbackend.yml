@@ -25,7 +25,7 @@ on:
         required: false
         type: boolean
 env:
-    BUCKET_NAME: terraformbackend
+    BUCKET_NAME: "tfstate-$(echo ${{ github.event.inputs.cloud_provider }} | tr '[:upper:]' '[:lower:]')-$(echo ${{ github.event.inputs.region }} | tr '[:upper:]' '[:lower:]')-$(echo ${{ github.run_id }} | tr '[:upper:]' '[:lower:]')"
 jobs:
   create-and-destroy-s3:
     runs-on: ubuntu-latest
