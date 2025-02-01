@@ -1,5 +1,5 @@
 name: Manage Terraform Backend
-run-name: Manage Terraform Backend[cloud_provider=${{ github.event.inputs.cloud_provider }}, region=${{ github.event.inputs.region }}]
+run-name: Manage Terraform Backend[${{ github.event.inputs.cloud_provider }} | ${{ github.event.inputs.region }} | Action:${{ github.event.inputs.cloud_provider }}]
 on: 
   workflow_dispatch:
     inputs:
@@ -115,12 +115,14 @@ jobs:
     - name: AWS - Remove all objects from the bucket (if needed)
       if: env.BUCKET_EXISTS == 'true'
       run: |
+        BUCKET_NAME=${{ github.event.inputs.bucket_name }}
         # Remove objects (if there are any left)
         aws s3 rm s3://$BUCKET_NAME --recursive
     
     - name: AWS - Delete the S3 Bucket
       if: env.BUCKET_EXISTS == 'true'
       run: |
+        BUCKET_NAME=${{ github.event.inputs.bucket_name }}
         aws s3 rb s3://$BUCKET_NAME --force
         echo "Bucket $BUCKET_NAME has been deleted."
     
