@@ -1,5 +1,5 @@
 name: Manage Terraform Backend
-run-name: Manage Terraform Backend[${{ github.event.inputs.cloud_provider }} | ${{ github.event.inputs.region }} | Action:${{ github.event.inputs.cloud_provider }}]
+run-name: Manage TF Backend[Cloud_provider=${{ github.event.inputs.cloud_provider }}, region=${{ github.event.inputs.region }}, action:${{ github.event.inputs.cloud_provider }}]
 on: 
   workflow_dispatch:
     inputs:
@@ -95,6 +95,7 @@ jobs:
         else
           echo "BUCKET_EXISTS=false" >> $GITHUB_ENV
         fi
+        echo "Bucket exists: $BUCKET_EXISTS"
     
     - name: AWS - Delete all object versions and delete markers in the S3 bucket
       if: env.BUCKET_EXISTS == 'true'
@@ -115,8 +116,8 @@ jobs:
     - name: AWS - Remove all objects from the bucket (if needed)
       if: env.BUCKET_EXISTS == 'true'
       run: |
-        BUCKET_NAME=${{ github.event.inputs.bucket_name }}
         # Remove objects (if there are any left)
+        BUCKET_NAME=${{ github.event.inputs.bucket_name }}
         aws s3 rm s3://$BUCKET_NAME --recursive
     
     - name: AWS - Delete the S3 Bucket
