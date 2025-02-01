@@ -1,5 +1,5 @@
 name: Manage Terraform Backend
-run-name: Manage TF Backend[Cloud_provider=${{ github.event.inputs.cloud_provider }}, region=${{ github.event.inputs.region }}, action:${{ github.event.inputs.cloud_provider }}]
+run-name: Manage TF Backend[provider=${{ github.event.inputs.cloud_provider }}, region=${{ github.event.inputs.region }}, act:${{ github.event.inputs.cloud_provider }}]
 on: 
   workflow_dispatch:
     inputs:
