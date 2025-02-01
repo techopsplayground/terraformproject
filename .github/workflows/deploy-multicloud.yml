@@ -79,10 +79,10 @@ jobs:
       if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
       run: terraform plan -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}"
 
-    - name: AWS - Apply Terraform
-      if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
-      run: terraform apply -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
+    # - name: AWS - Apply Terraform
+    #   if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
+    #   run: terraform apply -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
 
-    - name: Destroy Terraform (Optional)
-      if: ${{ github.event.inputs.destroy == 'true' }}
-      run: terraform destroy -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve
+    # - name: Destroy Terraform (Optional)
+    #   if: ${{ github.event.inputs.destroy == 'true' }}
+    #   run: terraform destroy -var-file=terraform.tfvars -var "cloud_provider=${{ github.event.inputs.cloud_provider }}" -auto-approve

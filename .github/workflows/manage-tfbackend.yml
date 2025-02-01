@@ -1,0 +1,62 @@
+name: Manage Terraform Backend
+
+on: 
+  workflow_dispatch:
+    inputs:
+      cloud_provider:
+        description: 'Cloud Provider selected (AWS or Azure or GCP)'
+        required: true
+        type: choice
+        options:
+          - AWS
+          - AZ
+          - GCP
+      region:
+        description: 'Select the region'
+        required: true
+        type: choice
+        options:
+          - us-east-1
+          - us-west-1
+          - az-east
+          - az-west
+      destroy:
+        description: 'Destroy the resources'
+        required: false
+        type: boolean
+env:
+    BUCKET_NAME: terraformbackend
+jobs:
+  create-and-destroy-s3:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: AWS - Configure AWS Credentials
+      if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.M_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.M_AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{github.event.inputs.region}}  # Change as needed
+
+    - name: AWS - Create S3 Bucket
+      if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
+      run: |
+        BUCKET_NAME=${{ env.BUCKET_NAME }}
+        aws s3 mb s3://$BUCKET_NAME
+        echo "BUCKET_NAME=$BUCKET_NAME" >> $GITHUB_ENV
+
+    - name: AWS - Upload a Test File (Optional)
+      if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
+      run: |
+        echo "Hello, S3!" > test.txt
+        aws s3 cp test.txt s3://$BUCKET_NAME/
+
+    - name: AWS - Delete S3 Bucket
+      if: ${{ github.event.inputs.destroy == true && github.event.inputs.cloud_provider == 'AWS' }}
+      run: |
+        aws s3 rm s3://$BUCKET_NAME --recursive  # Empty the bucket first
+        aws s3 rb s3://$BUCKET_NAME --force  # Delete the bucket
