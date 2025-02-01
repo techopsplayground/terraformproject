@@ -32,7 +32,7 @@ on:
 jobs:
   setup-s3-backend:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.cloud_provider == 'AWS' }}
+    if: ${{ github.event.inputs.destroy == false && github.event.inputs.cloud_provider == 'AWS' }}
     steps:
     
     - name: Checkout repository
