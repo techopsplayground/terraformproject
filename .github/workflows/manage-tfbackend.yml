@@ -78,31 +78,52 @@ jobs:
     if: ${{ github.event.inputs.action == 'destroy' && github.event.inputs.cloud_provider == 'AWS' }}
     steps:
 
-    - name: Configure AWS Credentials
+    - name: AWS - Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.M_AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.M_AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{github.event.inputs.region}}
 
-    - name: Check if S3 Bucket Exists
+    - name: AWS - Check if S3 Bucket Exists
       id: check_bucket
       run: |
         BUCKET_NAME=${{ github.event.inputs.bucket_name }}
+        echo "Bucket name is: $BUCKET_NAME"  # Debugging step
         if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
           echo "BUCKET_EXISTS=true" >> $GITHUB_ENV
         else
           echo "BUCKET_EXISTS=false" >> $GITHUB_ENV
         fi
-
-    - name: Delete S3 Bucket and DynamoDB Table (if exists)
-      if: ${{ env.BUCKET_EXISTS == 'true' }}
+    
+    - name: AWS - Delete all object versions and delete markers in the S3 bucket
+      if: env.BUCKET_EXISTS == 'true'
       run: |
-        BUCKET_NAME=${{ github.event.inputs.bucket_name }}
-        aws s3 rm s3://$BUCKET_NAME --recursive  # Empty the bucket
-        aws s3 rb s3://$BUCKET_NAME
-        aws dynamodb delete-table --table-name terraform-lock || true
-
-    - name: Log if Bucket Does Not Exist
-      if: ${{ env.BUCKET_EXISTS == 'false' }}
+        # List all versions in the bucket and delete them
+        aws s3api list-object-versions --bucket $BUCKET_NAME --query 'Versions[].{Key:Key,VersionId:VersionId}' --output text |
+        while read -r key version_id; do
+          echo "Deleting object version: $key with version id: $version_id"
+          aws s3api delete-object --bucket $BUCKET_NAME --key "$key" --version-id "$version_id"
+        done
+        # List and delete delete markers (if any)
+        aws s3api list-object-versions --bucket $BUCKET_NAME --query 'DeleteMarkers[].{Key:Key,VersionId:VersionId}' --output text |
+        while read -r key version_id; do
+          echo "Deleting delete marker: $key with version id: $version_id"
+          aws s3api delete-object --bucket $BUCKET_NAME --key "$key" --version-id "$version_id"
+        done
+    
+    - name: AWS - Remove all objects from the bucket (if needed)
+      if: env.BUCKET_EXISTS == 'true'
+      run: |
+        # Remove objects (if there are any left)
+        aws s3 rm s3://$BUCKET_NAME --recursive
+    
+    - name: AWS - Delete the S3 Bucket
+      if: env.BUCKET_EXISTS == 'true'
+      run: |
+        aws s3 rb s3://$BUCKET_NAME --force
+        echo "Bucket $BUCKET_NAME has been deleted."
+    
+    - name: AWS - Log if Bucket Does Not Exist
+      if: env.BUCKET_EXISTS == 'false'
       run: echo "S3 bucket does not exist, skipping deletion."
