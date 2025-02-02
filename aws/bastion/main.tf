@@ -13,6 +13,14 @@ provider "aws" {
   region     = var.region
 }
 
+module "bastion_security_group" {
+  source = "../modules/security_group"
+
+  prefix    = local.prefix
+  vpc_id    = aws_vpc.main.id
+  common_tags = local.common_tags
+}
+
 module "bastion" {
   source = "../../modules/compute/aws/ec2"
 
