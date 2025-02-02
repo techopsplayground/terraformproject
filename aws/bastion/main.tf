@@ -13,8 +13,14 @@ provider "aws" {
   region     = var.region
 }
 
+module "bastion_iam" {
+  source       = "../../modules/iam/aws/instance_profile"
+  prefix       = local.prefix
+  s3_bucket_arn = aws_s3_bucket.s3.arn  # Assuming you already have an S3 bucket named `aws_s3_bucket.s3`
+}
+
 module "bastion_security_group" {
-  source = "../modules/security_group"
+  source = "../../modules/networking/aws/security_group"
 
   prefix    = local.prefix
   vpc_id    = aws_vpc.main.id
