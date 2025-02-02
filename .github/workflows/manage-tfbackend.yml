@@ -118,7 +118,7 @@ jobs:
       run: |
         # Remove objects (if there are any left)
         BUCKET_NAME=${{ github.event.inputs.bucket_name }}
-        aws s3 rm s3://$BUCKET_NAME --recursive --force
+        aws s3 rm s3://$BUCKET_NAME --recursive
     
     - name: AWS - Delete the S3 Bucket
       if: env.BUCKET_EXISTS == 'true'
